@@ -37,4 +37,14 @@ if st.button("upload"):
         "http://127.0.0.1:8000/upload",
         files=files
     )
-    st.write(response.json()["message"])
+    data = response.json()
+    if "text" in data:
+        st.write("PDF processed successfully!")
+        st.text_area(
+            "Extracted Text",
+            data["text"],
+            height=400
+        )
+    
+    else:
+        st.success(data["message"])
