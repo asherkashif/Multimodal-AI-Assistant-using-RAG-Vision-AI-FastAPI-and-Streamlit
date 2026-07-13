@@ -6,6 +6,19 @@ st.set_page_config(page_title="Multimodal AI Assistant",
 
 st.title("Multimodal AI Assistant")
 
+uploaded_file= st.file_uploader(
+    "Upload a file", 
+    type=["pdf", "jpeg", "jpg", "png"])
+if uploaded_file is not None:
+
+    files ={
+        "files":{
+            uploaded_file.name,
+            uploaded_file,
+            uploaded_file.type
+        }
+    }
+   
 st.write("Welcome to the Multimodal AI Assistant!")
 
 st.sidebar.title("Navigation")
@@ -20,9 +33,9 @@ option =st.sidebar.selectbox(
         ])
 st.write("Selected:", option)
 
-try:
-    response = requests.get("http://localhost:8000/")
-    data = response.json()
-    st.success(data["message"])
-except requests.RequestException as e:
-    st.error(f"Error fetching data from backend: {e}")
+if st.button("upload"):
+    response = requests.post(
+        "http://localhost:8000/upload",
+        files=files
+    )
+    st.write(response.json()["message"])
