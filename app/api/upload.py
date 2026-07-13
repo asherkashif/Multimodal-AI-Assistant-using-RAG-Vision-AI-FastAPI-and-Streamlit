@@ -2,6 +2,7 @@ from fastapi import APIRouter, UploadFile, File
 import os
 import shutil
 
+
 router = APIRouter()
 upload_directory = "uploads"
 os.makedirs(upload_directory, exist_ok=True)

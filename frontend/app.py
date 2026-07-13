@@ -10,13 +10,12 @@ uploaded_file= st.file_uploader(
     "Upload a file", 
     type=["pdf", "jpeg", "jpg", "png"])
 if uploaded_file is not None:
-
-    files ={
-        "files":{
+    files = {
+        "file": (
             uploaded_file.name,
-            uploaded_file,
-            uploaded_file.type
-        }
+            uploaded_file.getvalue(),
+            uploaded_file.type,
+        )
     }
    
 st.write("Welcome to the Multimodal AI Assistant!")
@@ -35,7 +34,7 @@ st.write("Selected:", option)
 
 if st.button("upload"):
     response = requests.post(
-        "http://localhost:8000/upload",
+        "http://127.0.0.1:8000/upload",
         files=files
     )
     st.write(response.json()["message"])
