@@ -2,7 +2,7 @@ from langchain_community.vectorstores import FAISS
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
 
 embeddings = GoogleGenerativeAIEmbeddings(
-    model="text-embedding-001"
+    model="gemini-embedding-001"
 )
 
 def load_vector_store():
