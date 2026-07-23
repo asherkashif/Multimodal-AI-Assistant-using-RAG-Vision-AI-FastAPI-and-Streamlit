@@ -2,6 +2,8 @@ from fastapi import APIRouter, UploadFile, File
 from app.services.pdf_service import extract_text_from_pdf
 from app.services.chunk_service import split_text
 from app.services.vector_store import create_vector_store
+from app.services.retriever import load_vector_store, similarity_search, get_relevant_chunks    
+from app.services.rag_service import generate_answer
 import os
 import shutil
 
