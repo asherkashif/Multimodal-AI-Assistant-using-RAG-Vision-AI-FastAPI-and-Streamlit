@@ -4,6 +4,7 @@ from app.services.chunk_service import split_text
 from app.services.vector_store import create_vector_store
 from app.services.retriever import load_vector_store, similarity_search, get_relevant_chunks    
 from app.services.rag_service import generate_answer
+from app.services.vision_service import process_image
 import os
 import shutil
 
@@ -34,6 +35,14 @@ async def upload_file(file: UploadFile = File(...)):
             "filename": file.filename,
             "chunks": len(chunks),
             "message": "Vector store created successfully."
+        }
+    elif file.filename.endswith(".png") or \
+        file.filename.endswith(".jpg") or \
+        file.filename.endswith(".jpeg"):
+        result = process_image(file_path)
+        return{
+            "filename":file.filename,
+            "analysis":result
         }
 
     return {
