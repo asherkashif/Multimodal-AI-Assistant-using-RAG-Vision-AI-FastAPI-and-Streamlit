@@ -11,7 +11,7 @@ model = ChatGoogleGenerativeAI(
 )
 
 
-def process_image(file_path: str):
+def process_image(file_path: str, user_prompt: str):
 
     # Open image
     image = Image.open(file_path)
@@ -27,23 +27,23 @@ def process_image(file_path: str):
         buffer.getvalue()
     ).decode("utf-8")
 
+    # User prompt + image information
+    prompt = f"""
+You are an AI vision assistant.
 
-    prompt = """
-You are an AI assistant that processes images.
+Image Dimensions:
+Width: {width}
+Height: {height}
 
-Analyze this image and provide:
+User Question:
+{user_prompt}
 
-1. Image description
-2. Image dimensions
-3. Suggested improvements or edits
-4. Object detection (all visible objects)
-5. Any visible text in the image
-6. Important features or elements
-
-If there is no text in the image, say:
-"No text detected in the image."
+Answer only according to the user's question.
+If the user asks for image description, describe it.
+If the user asks for OCR, extract the text.
+If there is no text, say:
+'No text detected in the image.'
 """
-
 
     message = HumanMessage(
         content=[
@@ -54,18 +54,12 @@ If there is no text in the image, say:
             {
                 "type": "image_url",
                 "image_url": {
-                    "url": f"data:image/{image.format};base64,{image_data}"
+                    "url": f"data:image/{image.format or 'png'};base64,{image_data}"
                 }
             }
         ]
     )
 
-
     response = model.invoke([message])
 
-
-    return {
-        "filename": file_path,
-        "dimensions": f"{width}x{height}",
-        "analysis": response.content
-    }
+    return response.content

@@ -32,20 +32,38 @@ option =st.sidebar.selectbox(
         ])
 st.write("Selected:", option)
 
-if st.button("upload"):
+if st.button("Upload"):
+
     response = requests.post(
         "http://127.0.0.1:8000/upload",
         files=files
     )
+
     data = response.json()
+
+    # PDF Response
     if "text" in data:
-        st.write("PDF processed successfully!")
+
+        st.success("PDF processed successfully!")
+
         st.text_area(
             "Extracted Text",
             data["text"],
             height=400
         )
-    
+
+    # Image Response
+    elif "analysis" in data:
+
+        st.success("Image processed successfully!")
+
+        st.image(uploaded_file, caption=uploaded_file.name)
+
+        st.markdown("### Image Analysis")
+
+        st.write(data["analysis"])
+
+    # Other Response
     else:
         st.success(data["message"])
 
@@ -57,6 +75,4 @@ if st.button("Ask"):
         json={"question": question}
     )
     
-    print(response.json())
-
     st.write(response.json()["answer"])
