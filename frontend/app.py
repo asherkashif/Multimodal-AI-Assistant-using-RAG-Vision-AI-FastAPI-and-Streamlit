@@ -1,15 +1,48 @@
 import streamlit as st
 import requests
 
-st.set_page_config(page_title="Multimodal AI Assistant", 
-                   page_icon=":smiley:", layout="wide")
+st.set_page_config(
+    page_title="Multimodal AI Assistant",
+    page_icon="🤖",
+    layout="wide"
+)
 
-st.title("Multimodal AI Assistant")
+st.title("🤖 Multimodal AI Assistant")
+st.write("Welcome to the Multimodal AI Assistant!")
 
-uploaded_file= st.file_uploader(
-    "Upload a file", 
-    type=["pdf", "jpeg", "jpg", "png"])
+# ---------------- Chat History ----------------
+if "messages" not in st.session_state:
+    st.session_state.messages = []
+
+# Show previous messages
+for msg in st.session_state.messages:
+    with st.chat_message(msg["role"]):
+        st.write(msg["content"])
+
+# ---------------- Sidebar ----------------
+st.sidebar.title("Navigation")
+
+option = st.sidebar.selectbox(
+    "Choose",
+    [
+        "Home",
+        "Chat",
+        "Upload Documents",
+        "Upload Images",
+        "Generate Report"
+    ]
+)
+
+st.write("Selected:", option)
+
+# ---------------- Upload ----------------
+uploaded_file = st.file_uploader(
+    "Upload a file",
+    type=["pdf", "jpg", "jpeg", "png"]
+)
+
 if uploaded_file is not None:
+
     files = {
         "file": (
             uploaded_file.name,
@@ -17,62 +50,68 @@ if uploaded_file is not None:
             uploaded_file.type,
         )
     }
-   
-st.write("Welcome to the Multimodal AI Assistant!")
 
-st.sidebar.title("Navigation")
-option =st.sidebar.selectbox(
-    "Choose", 
-    [
-        "Home",
-        "Chat",
-        "Upload Documents",
-        "Upload Images",
-        "Generate report"
-        ])
-st.write("Selected:", option)
+    if st.button("Upload"):
 
-if st.button("Upload"):
+        with st.spinner("Uploading..."):
 
-    response = requests.post(
-        "http://127.0.0.1:8000/upload",
-        files=files
-    )
+            response = requests.post(
+                "http://127.0.0.1:8000/upload",
+                files=files
+            )
 
-    data = response.json()
+        data = response.json()
 
-    # PDF Response
-    if "text" in data:
-
-        st.success("PDF processed successfully!")
-
-        st.text_area(
-            "Extracted Text",
-            data["text"],
-            height=400
-        )
-
-    # Image Response
-    elif "analysis" in data:
-
-        st.success("Image processed successfully!")
-
-        st.image(uploaded_file, caption=uploaded_file.name)
-
-        st.markdown("### Image Analysis")
-
-        st.write(data["analysis"])
-
-    # Other Response
-    else:
         st.success(data["message"])
 
-question = st.text_input("Ask a question")
+        # Image Preview
+        if uploaded_file.type.startswith("image"):
+            st.image(
+                uploaded_file,
+                caption=uploaded_file.name,
+                use_container_width=True
+            )
 
-if st.button("Ask"):
-    response = requests.post(
-        "http://127.0.0.1:8000/ask",
-        json={"question": question}
+        # PDF Info
+        elif uploaded_file.type == "application/pdf":
+            st.success(
+                f"Vector Store Created ({data['chunks']} chunks)"
+            )
+
+# ---------------- Chat ----------------
+question = st.chat_input("Ask anything...")
+
+if question:
+
+    # Show user message
+    st.session_state.messages.append(
+        {
+            "role": "user",
+            "content": question
+        }
     )
-    
-    st.write(response.json()["answer"])
+
+    with st.chat_message("user"):
+        st.write(question)
+
+    with st.spinner("Thinking..."):
+
+        response = requests.post(
+            "http://127.0.0.1:8000/ask",
+            json={
+                "question": question
+            }
+        )
+
+        answer = response.json()["answer"]
+
+    # Save assistant response
+    st.session_state.messages.append(
+        {
+            "role": "assistant",
+            "content": answer
+        }
+    )
+
+    with st.chat_message("assistant"):
+        st.write(answer)

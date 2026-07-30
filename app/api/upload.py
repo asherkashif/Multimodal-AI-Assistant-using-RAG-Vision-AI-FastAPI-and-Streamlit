@@ -13,15 +13,22 @@ router = APIRouter()
 upload_directory = "uploads"
 os.makedirs(upload_directory, exist_ok=True)
 
+current_file_type = None
+current_image_path = None
 
 @router.post("/upload")
 async def upload_file(file: UploadFile = File(...)):
+    global current_file_type, current_image_path
+
     file_path = os.path.join(upload_directory, file.filename)
 
     with open(file_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
 
-    if file.filename.endswith(".pdf"):
+    if file.filename.lower().endswith(".pdf"):
+        
+        current_file_type = "pdf"
+        current_image_path = None
         # Extract text
         extracted_text = extract_text_from_pdf(file_path)
 
@@ -36,13 +43,14 @@ async def upload_file(file: UploadFile = File(...)):
             "chunks": len(chunks),
             "message": "Vector store created successfully."
         }
-    elif file.filename.endswith(".png") or \
-        file.filename.endswith(".jpg") or \
-        file.filename.endswith(".jpeg"):
-        result = process_image(file_path)
-        return{
-            "filename":file.filename,
-            "analysis":result
+    elif file.filename.lower().endswith((".png", ".jpg", ".jpeg")):
+
+        current_file_type = "image"
+        current_image_path = file_path
+
+        return {
+            "filename": file.filename,
+            "message": "Image uploaded successfully."
         }
 
     return {
