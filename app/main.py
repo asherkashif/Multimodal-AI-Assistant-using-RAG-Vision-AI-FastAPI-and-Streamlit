@@ -2,6 +2,11 @@ from fastapi import FastAPI
 from app.api import upload
 from app.api import ask
 from app.api import report
+from app.database.database import engine
+from app.database.models import Base
+
+
+Base.metadata.create_all(bind=engine)
 
 app =FastAPI()
 
