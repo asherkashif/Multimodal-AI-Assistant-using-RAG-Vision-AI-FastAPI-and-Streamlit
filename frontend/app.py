@@ -7,8 +7,7 @@ st.set_page_config(
     layout="wide"
 )
 
-st.title("🤖 Multimodal AI Assistant")
-st.write("Welcome to the Multimodal AI Assistant!")
+
 
 # ---------------- Chat History ----------------
 if "messages" not in st.session_state:
@@ -34,7 +33,46 @@ option = st.sidebar.selectbox(
 )
 
 st.write("Selected:", option)
+if option == "Home":
+    st.title("🤖 Multimodal AI Assistant")
+    st.write("Welcome to the Multimodal AI Assistant!")
 
+elif option == "Chat":
+    # Chat UI
+    pass
+
+elif option == "Upload Documents":
+    # PDF Upload
+    pass
+
+elif option == "Upload Images":
+    # Image Upload
+    pass
+
+elif option == "Generate Report":
+    # Report Generation
+    st.header("Generate Conversation Report")
+
+    if st.button("Generate PDF Report"):
+
+        response = requests.post(
+            "http://127.0.0.1:8000/generate-report",
+            json={
+                "messages": st.session_state.messages
+            }
+        )
+
+        if response.status_code == 200:
+
+            st.download_button(
+                "Download PDF",
+                data=response.content,
+                file_name="conversation_report.pdf",
+                mime="application/pdf"
+            )
+
+        else:
+            st.error("Failed to generate report.")
 # ---------------- Upload ----------------
 uploaded_file = st.file_uploader(
     "Upload a file",
