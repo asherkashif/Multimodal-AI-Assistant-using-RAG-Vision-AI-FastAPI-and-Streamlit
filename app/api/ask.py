@@ -12,22 +12,25 @@ router = APIRouter()
 
 class QuestionRequest(BaseModel):
     question: str
+    messages: list = []
 
 
 @router.post("/ask")
 async def ask(request: QuestionRequest):
+
+    question = request.question
+    messages = request.messages
 
     # -------- IMAGE --------
     if upload.current_file_type == "image":
 
         answer = process_image(
             upload.current_image_path,
-            request.question
+            question,
+            messages
         )
 
-        return {
-            "answer": answer
-        }
+        return {"answer": answer}
 
     # -------- PDF --------
     elif upload.current_file_type == "pdf":
@@ -35,18 +38,17 @@ async def ask(request: QuestionRequest):
         vector_db = load_vector_store()
 
         chunks = get_relevant_chunks(
-            request.question,
+            question,
             vector_db
         )
 
         answer = generate_answer(
             chunks,
-            request.question
+            question,
+            messages
         )
 
-        return {
-            "answer": answer
-        }
+        return {"answer": answer}
 
     return {
         "answer": "Please upload a PDF or Image first."

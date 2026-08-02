@@ -11,15 +11,16 @@ model = ChatGoogleGenerativeAI(
 )
 
 
-def process_image(file_path: str, user_prompt: str):
+def process_image(
+    file_path: str,
+    user_prompt: str,
+    messages: list
+):
 
-    # Open image
     image = Image.open(file_path)
 
-    # Get image dimensions
     width, height = image.size
 
-    # Convert image to base64
     buffer = io.BytesIO()
     image.save(buffer, format=image.format or "PNG")
 
@@ -27,22 +28,35 @@ def process_image(file_path: str, user_prompt: str):
         buffer.getvalue()
     ).decode("utf-8")
 
-    # User prompt + image information
+    history = ""
+
+    for msg in messages[:-1]:
+        role = msg["role"].capitalize()
+        history += f"{role}: {msg['content']}\n"
+
     prompt = f"""
 You are an AI vision assistant.
 
-Image Dimensions:
+Use the previous conversation to understand follow-up questions.
+
+Previous Conversation:
+{history}
+
+Image Information:
 Width: {width}
 Height: {height}
 
-User Question:
+Current User Question:
 {user_prompt}
 
-Answer only according to the user's question.
-If the user asks for image description, describe it.
-If the user asks for OCR, extract the text.
-If there is no text, say:
-'No text detected in the image.'
+Instructions:
+- Answer based on the uploaded image.
+- Use previous conversation if the current question is a follow-up.
+- If the user asks for an image description, describe the image.
+- If the user asks for OCR, extract all visible text.
+- If no text exists, reply:
+  'No text detected in the image.'
+- Do not make up details that are not visible in the image.
 """
 
     message = HumanMessage(
@@ -63,3 +77,5 @@ If there is no text, say:
     response = model.invoke([message])
 
     return response.content
+
+    

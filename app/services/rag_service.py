@@ -6,41 +6,62 @@ model = ChatGoogleGenerativeAI(
     temperature=0
 )
 
-prompt = ChatPromptTemplate.from_messages([
-    (
-        "system",
-        """
+prompt = ChatPromptTemplate.from_messages(
+    [
+        (
+            "system",
+            """
 You are a helpful AI assistant.
 
-Answer ONLY from the provided context.
+Use the previous conversation to understand the context.
 
-Context:
+Answer ONLY from the provided document context.
+
+Previous Conversation:
+{history}
+
+Document Context:
 {context}
 
-If the answer is not in the context, reply exactly:
+If the answer exists in the document, answer using the document.
+
+If the user asks a follow-up question that depends on previous conversation, use the conversation history.
+
+If the answer is not available in the document or previous conversation, reply exactly:
+
 "I don't know."
 """
-    ),
-    (
-        "human",
-        "{question}"
-    )
-])
+        ),
+        (
+            "human",
+            "{question}"
+        )
+    ]
+)
 
 
-def generate_answer(context: list[str], question: str):
-    """
-    Generate answer using retrieved context.
-    """
+def generate_answer(
+    context: list[str],
+    question: str,
+    messages: list
+):
 
-    # Convert list of chunks into one string
     context_text = "\n\n".join(context)
 
-    messages = prompt.invoke({
-        "context": context_text,
-        "question": question
-    })
+    history = ""
 
-    response = model.invoke(messages)
+    for msg in messages[:-1]:
+        role = msg["role"].capitalize()
+        history += f"{role}: {msg['content']}\n"
+
+    prompt_messages = prompt.invoke(
+        {
+            "history": history,
+            "context": context_text,
+            "question": question
+        }
+    )
+
+    response = model.invoke(prompt_messages)
 
     return response.content
