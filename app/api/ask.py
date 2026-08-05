@@ -2,6 +2,7 @@ from fastapi import APIRouter
 from pydantic import BaseModel
 from fastapi import Depends
 from app.services.jwt_service import get_current_user
+from app.database.models import User
 
 from app.services.rag_service import generate_answer
 from app.services.retriever import load_vector_store, get_relevant_chunks
@@ -19,7 +20,7 @@ class QuestionRequest(BaseModel):
 
 @router.post("/ask")
 async def ask(request: QuestionRequest,
-              current_user=Depends(get_current_user)):
+              current_user: User = Depends(get_current_user)):
 
     question = request.question
     messages = request.messages

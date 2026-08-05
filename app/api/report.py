@@ -1,6 +1,9 @@
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
+from fastapi import Depends
+from app.services.jwt_service import get_current_user
+from app.database.models import User
 from app.services.pdf_report import generate_chat_report
 import os
 
@@ -10,7 +13,8 @@ class ReportRequest(BaseModel):
     messages: list
 
 @router.post("/generate-report")
-async def generate_report(request: ReportRequest):
+async def generate_report(request: ReportRequest,
+                          current_user: User = Depends(get_current_user)):
 
     pdf_path = generate_chat_report(request.messages)
 

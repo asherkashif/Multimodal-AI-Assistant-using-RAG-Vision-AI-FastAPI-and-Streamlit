@@ -5,6 +5,9 @@ from app.services.vector_store import create_vector_store
 from app.services.retriever import load_vector_store, similarity_search, get_relevant_chunks    
 from app.services.rag_service import generate_answer
 from app.services.vision_service import process_image
+from fastapi import Depends
+from app.services.jwt_service import get_current_user
+from app.database.models import User
 import os
 import shutil
 
@@ -17,7 +20,8 @@ current_file_type = None
 current_image_path = None
 
 @router.post("/upload")
-async def upload_file(file: UploadFile = File(...)):
+async def upload_file(file: UploadFile = File(...),
+                      current_user: User = Depends(get_current_user)):
     global current_file_type, current_image_path
 
     file_path = os.path.join(upload_directory, file.filename)
